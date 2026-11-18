@@ -292,13 +292,13 @@
         
     
             var tile_layer_b16e064e942ffd2622e16082ad01ef44 = L.tileLayer(
-                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
                 {
   "minZoom": 0,
-  "maxZoom": 19,
-  "maxNativeZoom": 19,
+  "maxZoom": 20,
+  "maxNativeZoom": 16,
   "noWrap": false,
-  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "attribution": "Tiles \u0026copy; Esri \u0026mdash; Esri, DeLorme, NAVTEQ",
   "subdomains": "abc",
   "detectRetina": false,
   "tms": false,
@@ -309,6 +309,20 @@
         
     
             tile_layer_b16e064e942ffd2622e16082ad01ef44.addTo(map_6ec082f6c511f7a09a151f43abb975a6);
+            var tile_layer_b16e064e942ffd2622e16082ad01ef44_streets = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Tiles \u0026copy; Esri \u0026mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+            );
         
     
             map_6ec082f6c511f7a09a151f43abb975a6.fitBounds(
@@ -63816,7 +63830,8 @@
     
             var layer_control_ee34f25e1284fda3be6447c31f8eeeda_layers = {
                 base_layers : {
-                    "openstreetmap" : tile_layer_b16e064e942ffd2622e16082ad01ef44,
+                    "Esri light gray" : tile_layer_b16e064e942ffd2622e16082ad01ef44,
+                    "Esri streets" : tile_layer_b16e064e942ffd2622e16082ad01ef44_streets,
                 },
                 overlays :  {
                     "Road network (near track)" : feature_group_e8a8d7512a6eb62f05c6a6e3476dfbe9,

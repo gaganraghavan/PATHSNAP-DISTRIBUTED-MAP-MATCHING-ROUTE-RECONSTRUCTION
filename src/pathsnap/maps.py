@@ -62,7 +62,13 @@ def trip_map(
     shown in a fixed box at the top right (e.g. trip id and accuracy).
     """
     tr = trip.track
-    m = folium.Map(tiles="OpenStreetMap", control_scale=True)
+    # Esri basemaps: tile.openstreetmap.org serves an "Access blocked" tile to
+    # requests without a Referer (every map opened as a local file:// page), and
+    # CARTO basemaps now need an API key. Esri needs neither. Tiles are upscaled
+    # past their native zoom so the map can still zoom in to street level.
+    m = folium.Map(tiles=None, control_scale=True)
+    folium.TileLayer("Esri.WorldGrayCanvas", name="Esri light gray", max_zoom=20, max_native_zoom=16).add_to(m)
+    folium.TileLayer("Esri.WorldStreetMap", name="Esri streets", max_zoom=20, max_native_zoom=18).add_to(m)
     m.fit_bounds([[tr.lat.min(), tr.lon.min()], [tr.lat.max(), tr.lon.max()]])
 
     if net is not None:
