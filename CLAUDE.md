@@ -13,12 +13,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `uv run python scripts/05_bayesian_optimisation.py`: Optuna TPE search for LambdaRank (60 trials, ~1 h; resumable from `artifacts/tuning/optuna.db`), untuned vs tuned, writes `models/lambdarank_tuned.*` and emission scores to `artifacts/scores/` (needed by 06)
 - `uv run python scripts/06_hmm_decoding.py`: decoder grid on train (OOF emissions), classifier-only vs HMM on train + student-test (`results/hmm/`, `models/hmm_decoder.json`, predictions in `artifacts/hmm/`, needed by 07)
 - `uv run python scripts/07_route_maps.py`: Folium + static route maps for student-test (`results/maps/route_*.{html,png}`)
+- `uv run python -m api --data-dir <trips folder>`: FastAPI backend on :8000 (default folder `<PATHSNAP_DATA>/student_test`)
+- `python ui/serve.py --api http://<api-host>:8000`: evaluator UI on :5173 (stdlib only)
 - EDA notebook: edit `scripts/make_eda_notebook.py`, run it from the repo root, then `cd notebooks && uv run jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb`
 - Brief PDFs: `pdftotext -layout "docs/<file>.pdf" -`
 
 ## Layout
 
-Library code in `src/pathsnap/` (io, geo, network, labels, candidates, features, models, evaluate, validate, maps, hmm, route); numbered pipeline scripts in `scripts/`; committed outputs in `results/`; committed model weights and decoder config in `models/`; regenerable intermediates in `artifacts/` (git-ignored); dataset in `dataset/Student folder/{train,student_test}/<trip>/` (git-ignored, override with `PATHSNAP_DATA`).
+Library code in `src/pathsnap/` (io, geo, network, labels, candidates, features, models, evaluate, validate, maps, hmm, route, inference); FastAPI backend in `api/` (trips, evaluation, app); static UI in `ui/` (Leaflet vendored in `ui/vendor/`); numbered pipeline scripts in `scripts/`; committed outputs in `results/`; committed model weights and decoder config in `models/`; regenerable intermediates in `artifacts/` (git-ignored); dataset in `dataset/Student folder/{train,student_test}/<trip>/` (git-ignored, override with `PATHSNAP_DATA`).
 
 ## Established data facts
 

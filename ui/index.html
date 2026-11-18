@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PathSnap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <aside class="rail">
+    <header class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><path d="M7 31 C 14 30, 13 19, 20 19 S 27 9, 33 9" /><circle cx="7" cy="31" r="3.5"/><circle cx="33" cy="9" r="3.5"/></svg>
+      </div>
+      <div>
+        <h1>PathSnap</h1>
+        <p class="tagline">GPS map matching</p>
+      </div>
+    </header>
+
+    <section class="api" aria-label="API connection">
+      <label for="api-url" class="eyebrow">API server</label>
+      <form id="api-form" class="api-row">
+        <input id="api-url" type="url" spellcheck="false" autocomplete="off" placeholder="http://192.168.1.10:8000" required>
+        <button type="submit" class="btn-ghost" id="api-connect">Connect</button>
+      </form>
+      <p class="api-status" id="api-status" role="status" aria-live="polite">
+        <span class="dot" data-state="idle"></span><span id="api-status-text">Not connected</span>
+      </p>
+    </section>
+
+    <section class="trips" aria-label="Evaluation trips">
+      <div class="trips-head">
+        <span class="eyebrow">Trips</span>
+        <span class="count" id="trip-count">–</span>
+      </div>
+      <ol id="trip-list" class="trip-list"></ol>
+    </section>
+
+    <footer class="rail-foot">
+      <button id="run" class="btn-run" disabled>
+        <span class="btn-run-label">Select a trip</span>
+        <span class="btn-run-key" aria-hidden="true">↵</span>
+      </button>
+      <p class="fine">Sends the trip ID to <code>POST /predict</code>. Accuracy is computed on the server; reference routes are never sent to this page.</p>
+    </footer>
+  </aside>
+
+  <main class="stage">
+    <div class="map-wrap">
+      <div id="map" aria-label="Route map"></div>
+
+      <div class="map-overlay map-title" id="map-title" hidden>
+        <span class="eyebrow">Trip</span>
+        <strong id="map-trip">—</strong>
+        <span class="map-sub" id="map-sub"></span>
+      </div>
+
+      <div class="map-overlay layers" id="layers" hidden>
+        <span class="eyebrow">Layers</span>
+        <button class="chip on" data-layer="hmm" aria-pressed="true"><i class="sw sw-hmm"></i>Classifier + HMM</button>
+        <button class="chip on" data-layer="classifier" aria-pressed="true"><i class="sw sw-clf"></i>Classifier only</button>
+        <button class="chip on" data-layer="gps" aria-pressed="true"><i class="sw sw-gps"></i>Raw GPS</button>
+        <button class="chip on" data-layer="network" aria-pressed="true"><i class="sw sw-net"></i>Road network</button>
+        <div class="basemap">
+          <button class="seg on" data-base="dark">Dark</button><button class="seg" data-base="streets">Streets</button><button class="seg" data-base="none">None</button>
+        </div>
+      </div>
+
+      <div class="empty" id="empty">
+        <div class="empty-inner">
+          <p class="empty-kicker">No trip selected</p>
+          <h2>Select a trip and run it to reconstruct its route.</h2>
+          <ol class="steps">
+            <li><b>1</b> Candidate road segments for each GPS point</li>
+            <li><b>2</b> Tuned LambdaRank model scores each candidate</li>
+            <li><b>3</b> HMM / Viterbi decodes a connected path</li>
+            <li><b>4</b> Server scores the route against the reference</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="busy" id="busy" hidden>
+        <div class="busy-card" role="status" aria-live="polite">
+          <span class="spinner" aria-hidden="true"></span>
+          <div>
+            <strong id="busy-title">Reconstructing route</strong>
+            <span id="busy-timer">0.0 s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="results" id="results" aria-label="Results">
+      <div class="results-main">
+        <div class="kpis" id="kpis">
+          <article class="kpi kpi-hero"><span class="kpi-label">Top-1 accuracy</span><span class="kpi-value">—</span><span class="kpi-delta"></span></article>
+          <article class="kpi"><span class="kpi-label">Macro F1</span><span class="kpi-value">—</span><span class="kpi-delta"></span></article>
+          <article class="kpi"><span class="kpi-label">Route F1</span><span class="kpi-value">—</span><span class="kpi-delta"></span></article>
+          <article class="kpi"><span class="kpi-label">Route continuity</span><span class="kpi-value">—</span><span class="kpi-delta"></span></article>
+        </div>
+
+        <div class="detail">
+          <div class="table-wrap">
+            <table class="cmp" id="cmp">
+              <thead><tr><th scope="col">Metric</th><th scope="col"><i class="sw sw-clf"></i>Classifier</th><th scope="col"><i class="sw sw-hmm"></i>Classifier + HMM</th></tr></thead>
+              <tbody><tr><td colspan="3" class="muted">No prediction yet.</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="side">
+            <div class="facts" id="facts"></div>
+            <div class="timing">
+              <div class="timing-head"><span class="eyebrow">Server time</span><span id="timing-total" class="mono">—</span></div>
+              <div class="timing-bar" id="timing-bar"></div>
+              <ul class="timing-legend" id="timing-legend"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="console">
+        <div class="console-head">
+          <span class="eyebrow">Server log</span>
+          <span class="console-live"><span class="dot" data-state="idle" id="log-dot"></span><span id="log-state">idle</span></span>
+        </div>
+        <ol class="console-body" id="log"></ol>
+      </div>
+    </section>
+  </main>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

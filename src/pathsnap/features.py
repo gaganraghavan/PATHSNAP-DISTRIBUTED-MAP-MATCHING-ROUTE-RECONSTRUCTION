@@ -59,9 +59,32 @@ def candidate_feature_frame(
     ``labels`` must be produced by ``labels.observation_labels``. Target and
     label-distance columns are metadata and must not be passed as model input.
     """
+    frame = candidate_model_features(trip, net, xy, candidates)
+    if len(frame) == 0:
+        return pd.DataFrame(columns=[*IDENTIFIER_COLUMNS, *MODEL_FEATURES, *TARGET_COLUMNS])
+    obs, arc = frame.obs.to_numpy(), frame.arc.to_numpy()
+    label_arc = np.asarray(labels["label_arc"], dtype=np.int64)
+    label_dist = np.asarray(labels["label_dist"], dtype=np.float64)
+    frame["is_label"] = (arc == label_arc[obs]).astype(np.uint8)
+    frame["label_distance_m"] = label_dist[obs].astype(np.float32)
+    frame["label_reliable_50m"] = (label_dist[obs] <= 50.0).astype(np.uint8)
+    return frame[[*IDENTIFIER_COLUMNS, *MODEL_FEATURES, *TARGET_COLUMNS]]
+
+
+def candidate_model_features(
+    trip: Trip,
+    net: Network,
+    xy: np.ndarray,
+    candidates: Candidates,
+) -> pd.DataFrame:
+    """Identifier and model-feature columns per candidate, computed without any labels.
+
+    This is the inference path (API): it needs only the GPS track and the road
+    network. :func:`candidate_feature_frame` adds the training targets on top.
+    """
     n_obs = len(xy)
     if len(candidates.obs) == 0:
-        return pd.DataFrame(columns=[*IDENTIFIER_COLUMNS, *MODEL_FEATURES, *TARGET_COLUMNS])
+        return pd.DataFrame(columns=[*IDENTIFIER_COLUMNS, *MODEL_FEATURES])
 
     step = np.zeros(n_obs, dtype=np.float64)
     gap = np.zeros(n_obs, dtype=np.float64)
@@ -91,9 +114,6 @@ def candidate_feature_frame(
     indegree = np.bincount(net.v, minlength=net.n_nodes)
     outdegree = np.bincount(net.u, minlength=net.n_nodes)
     start, end = net.u[arc], net.v[arc]
-    label_arc = np.asarray(labels["label_arc"], dtype=np.int64)
-    label_dist = np.asarray(labels["label_dist"], dtype=np.float64)
-    is_label = arc == label_arc[obs]
 
     frame = pd.DataFrame({
         "obs": obs,
@@ -109,12 +129,9 @@ def candidate_feature_frame(
         "gps_speed_mps": (step[obs] / np.maximum(gap[obs], 1.0)).astype(np.float32),
         "start_node_degree": (indegree[start] + outdegree[start]).astype(np.int16),
         "end_node_degree": (indegree[end] + outdegree[end]).astype(np.int16),
-        "is_label": is_label.astype(np.uint8),
-        "label_distance_m": label_dist[obs].astype(np.float32),
-        "label_reliable_50m": (label_dist[obs] <= 50.0).astype(np.uint8),
     })
     add_context_features(frame)
-    return frame[[*IDENTIFIER_COLUMNS, *MODEL_FEATURES, *TARGET_COLUMNS]]
+    return frame[[*IDENTIFIER_COLUMNS, *MODEL_FEATURES]]
 
 
 def add_context_features(frame: pd.DataFrame, window: int = CONTEXT_WINDOW,
