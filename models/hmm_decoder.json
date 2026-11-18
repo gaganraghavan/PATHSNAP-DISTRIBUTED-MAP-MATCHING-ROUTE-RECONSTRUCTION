@@ -1,0 +1,8 @@
+{
+  "beta_m": 5.0,
+  "emission_weight": 1.0,
+  "disconnect_logp": -30.0,
+  "max_speed_mps": 60.0,
+  "slack_m": 150.0,
+  "backward_tolerance_m": 15.0
+}

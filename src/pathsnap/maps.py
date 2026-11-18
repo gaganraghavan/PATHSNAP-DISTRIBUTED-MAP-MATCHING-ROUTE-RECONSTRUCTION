@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import folium
 import numpy as np
@@ -39,14 +39,28 @@ def nearby_arcs(trip: Trip, net: Network, buffer_m: float = 150.0) -> np.ndarray
     return np.unique(arc)
 
 
+PREDICTION_STYLES = [  # colour, weight, dash pattern for successive predicted routes
+    ("#1f77b4", 3.5, None),
+    ("#ff7f0e", 2.5, "6 6"),
+    ("#9467bd", 2.5, "2 6"),
+]
+
+
 def trip_map(
     trip: Trip,
     net: Network | None = None,
     reference: Sequence[int] | None = None,
-    predicted: Sequence[int] | None = None,
+    predicted: Sequence[int] | Mapping[str, Sequence[int]] | None = None,
     network_buffer_m: float = 150.0,
     gps_every: int = 1,
+    info_html: str | None = None,
 ) -> folium.Map:
+    """Interactive map of one trip.
+
+    ``predicted`` is one route (shown as "Predicted route") or a mapping from
+    layer name to route, drawn in ``PREDICTION_STYLES`` order. ``info_html`` is
+    shown in a fixed box at the top right (e.g. trip id and accuracy).
+    """
     tr = trip.track
     m = folium.Map(tiles="OpenStreetMap", control_scale=True)
     m.fit_bounds([[tr.lat.min(), tr.lon.min()], [tr.lat.max(), tr.lon.max()]])
@@ -59,34 +73,47 @@ def trip_map(
 
     if reference is not None:
         fg = folium.FeatureGroup(name="Reference route")
-        folium.PolyLine(_route_polyline(trip, reference), color=COLORS["reference"], weight=6, opacity=0.6).add_to(fg)
+        folium.PolyLine(_route_polyline(trip, reference), color=COLORS["reference"], weight=7, opacity=0.5).add_to(fg)
         fg.add_to(m)
 
+    layers: list[tuple[str, str]] = []
     if predicted is not None:
-        fg = folium.FeatureGroup(name="Predicted route")
-        folium.PolyLine(_route_polyline(trip, predicted), color=COLORS["predicted"], weight=3, opacity=0.9).add_to(fg)
-        fg.add_to(m)
+        routes = predicted if isinstance(predicted, Mapping) else {"Predicted route": predicted}
+        for (name, route), (color, weight, dash) in zip(routes.items(), PREDICTION_STYLES):
+            fg = folium.FeatureGroup(name=name)
+            folium.PolyLine(_route_polyline(trip, route), color=color, weight=weight, opacity=0.9,
+                            dash_array=dash, tooltip=name).add_to(fg)
+            fg.add_to(m)
+            layers.append((name, color))
 
     fg = folium.FeatureGroup(name="Raw GPS")
     sub = tr.iloc[::gps_every]
     for lat, lon, t in zip(sub.lat, sub.lon, sub.t):
         folium.CircleMarker((lat, lon), radius=2, color=COLORS["gps"], fill=True, weight=0,
                             fill_opacity=0.8, tooltip=f"t = {t:.0f} s").add_to(fg)
+    folium.Marker((tr.lat.iloc[0], tr.lon.iloc[0]), tooltip="Start",
+                  icon=folium.Icon(color="green", icon="play")).add_to(fg)
+    folium.Marker((tr.lat.iloc[-1], tr.lon.iloc[-1]), tooltip="End",
+                  icon=folium.Icon(color="red", icon="stop")).add_to(fg)
     fg.add_to(m)
 
     folium.LayerControl(collapsed=False).add_to(m)
-    _add_legend(m, net is not None, reference is not None, predicted is not None)
+    _add_legend(m, net is not None, reference is not None, layers)
+    if info_html:
+        m.get_root().html.add_child(folium.Element(
+            '<div style="position:fixed;top:12px;right:220px;z-index:9999;background:white;'
+            'padding:8px 10px;border:1px solid #999;border-radius:4px;font:12px sans-serif">'
+            f"{info_html}</div>"))
     return m
 
 
-def _add_legend(m: folium.Map, net: bool, ref: bool, pred: bool) -> None:
+def _add_legend(m: folium.Map, net: bool, ref: bool, layers: list[tuple[str, str]]) -> None:
     items = [("Raw GPS", COLORS["gps"])]
     if net:
         items.append(("Road network", COLORS["network"]))
     if ref:
         items.append(("Reference route", COLORS["reference"]))
-    if pred:
-        items.append(("Predicted route", COLORS["predicted"]))
+    items += layers
     rows = "".join(
         f'<div><span style="display:inline-block;width:14px;height:4px;background:{c};'
         f'margin-right:6px;vertical-align:middle"></span>{n}</div>' for n, c in items

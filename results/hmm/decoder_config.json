@@ -1,0 +1,32 @@
+{
+  "params": {
+    "beta_m": 5.0,
+    "emission_weight": 1.0,
+    "disconnect_logp": -30.0,
+    "max_speed_mps": 60.0,
+    "slack_m": 150.0,
+    "backward_tolerance_m": 15.0
+  },
+  "selection": "best observation-level top-1 on the 80 training trips with out-of-fold LambdaRank emissions (ties: fewer breaks); student-test not used",
+  "grid": {
+    "beta_m": [
+      2.0,
+      5.0,
+      10.0,
+      25.0,
+      60.0
+    ],
+    "emission_weight": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "disconnect_logp": [
+      -10.0,
+      -30.0
+    ]
+  },
+  "classifier_only_train_top1": 0.8890677238332371,
+  "chosen_train_top1": 0.9249847420185904,
+  "runtime_seconds": 342.4
+}

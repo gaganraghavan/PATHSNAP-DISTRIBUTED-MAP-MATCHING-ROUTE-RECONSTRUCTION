@@ -1,0 +1,15 @@
+{
+  "trial": 9,
+  "cv_top1_mean": 0.8850567417870258,
+  "params": {
+    "n_estimators": 540,
+    "learning_rate": 0.026946865572417687,
+    "num_leaves": 8,
+    "min_child_samples": 19,
+    "truncation_level": 11,
+    "colsample_bytree": 0.8377637070028385,
+    "subsample": 0.7825344828131279,
+    "reg_alpha": 2.7293781650374753,
+    "reg_lambda": 0.0385814373647905
+  }
+}

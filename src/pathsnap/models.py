@@ -111,14 +111,23 @@ class SoftmaxRanker(BaseEstimator):
     observation's candidates turns them into P(candidate is the reference arc).
     """
 
+    # The defaults are the untuned Phase 1 configuration (LightGBM's own
+    # defaults for the regularisation and sampling parameters).
     def __init__(self, n_estimators=400, learning_rate=0.05, num_leaves=31, min_child_samples=20,
-                 truncation_level=5, random_state=0):
+                 truncation_level=5, colsample_bytree=1.0, subsample=1.0, reg_alpha=0.0,
+                 reg_lambda=0.0, min_split_gain=0.0, random_state=0, n_jobs=None):
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
         self.num_leaves = num_leaves
         self.min_child_samples = min_child_samples
         self.truncation_level = truncation_level
+        self.colsample_bytree = colsample_bytree
+        self.subsample = subsample
+        self.reg_alpha = reg_alpha
+        self.reg_lambda = reg_lambda
+        self.min_split_gain = min_split_gain
         self.random_state = random_state
+        self.n_jobs = n_jobs
 
     def fit(self, X, y, query):
         import lightgbm as lgb
@@ -132,7 +141,13 @@ class SoftmaxRanker(BaseEstimator):
                                      learning_rate=self.learning_rate, num_leaves=self.num_leaves,
                                      min_child_samples=self.min_child_samples,
                                      lambdarank_truncation_level=self.truncation_level,
-                                     random_state=self.random_state, verbose=-1)
+                                     colsample_bytree=self.colsample_bytree,
+                                     # Row bagging needs a bagging frequency; 0 disables it.
+                                     subsample=self.subsample, subsample_freq=1 if self.subsample < 1 else 0,
+                                     reg_alpha=self.reg_alpha, reg_lambda=self.reg_lambda,
+                                     min_split_gain=self.min_split_gain,
+                                     random_state=self.random_state, verbose=-1,
+                                     **({} if self.n_jobs is None else {"n_jobs": self.n_jobs}))
         self.model_.fit(X, np.asarray(y), group=sizes)
         return self
 

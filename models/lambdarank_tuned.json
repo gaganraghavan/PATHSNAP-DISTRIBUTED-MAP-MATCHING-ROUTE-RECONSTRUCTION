@@ -1,0 +1,32 @@
+{
+  "model": "LightGBM LambdaRank with per-observation softmax (pathsnap.models.SoftmaxRanker)",
+  "features": [
+    "point_to_arc_m",
+    "candidate_rank",
+    "position_along_arc",
+    "heading_delta_cos",
+    "dist_minus_min",
+    "cos_minus_max",
+    "n_candidates",
+    "window_mean_dist_m",
+    "window_mean_cos"
+  ],
+  "params": {
+    "n_estimators": 540,
+    "learning_rate": 0.026946865572417687,
+    "num_leaves": 8,
+    "min_child_samples": 19,
+    "truncation_level": 11,
+    "colsample_bytree": 0.8377637070028385,
+    "subsample": 0.7825344828131279,
+    "reg_alpha": 2.7293781650374753,
+    "reg_lambda": 0.0385814373647905
+  },
+  "seed": 42,
+  "trained_on": "80 training trips, sample of 20000 reliable observations",
+  "student_test": {
+    "top1_accuracy": 0.8860607327653792,
+    "macro_f1": 0.846531510208869,
+    "observation_log_loss": 0.299251657996022
+  }
+}

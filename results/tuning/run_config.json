@@ -1,0 +1,85 @@
+{
+  "seed": 42,
+  "folds": 5,
+  "max_train_obs_per_fit": 20000,
+  "fold_assignment": "GroupKFold(shuffle=True) over the 80 training trips, group = trip (same as step 04)",
+  "features_per_fold": [
+    [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ]
+  ],
+  "features_final": [
+    "point_to_arc_m",
+    "candidate_rank",
+    "position_along_arc",
+    "heading_delta_cos",
+    "dist_minus_min",
+    "cos_minus_max",
+    "n_candidates",
+    "window_mean_dist_m",
+    "window_mean_cos"
+  ],
+  "trials_total": 31,
+  "trials_completed": 24,
+  "best_trial": 9,
+  "versions": {
+    "python": "3.12.16",
+    "lightgbm": "4.7.0",
+    "optuna": "5.1.0",
+    "numpy": "2.5.5",
+    "pandas": "3.1.1"
+  },
+  "runtime_seconds": 417.4
+}

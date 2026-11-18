@@ -1,0 +1,80 @@
+{
+  "objective": "maximise mean observation-level top-1 accuracy over 5 trip-grouped CV folds (80 training trips)",
+  "sampler": "optuna TPESampler(multivariate=True, n_startup_trials=15, seed)",
+  "pruner": "MedianPruner(n_startup_trials=10, n_warmup_steps=2) on the running fold mean",
+  "n_trials_requested": 30,
+  "n_trials_recorded": 31,
+  "seed": 42,
+  "space": {
+    "n_estimators": {
+      "type": "int",
+      "low": 100,
+      "high": 1500,
+      "log": true
+    },
+    "learning_rate": {
+      "type": "float",
+      "low": 0.01,
+      "high": 0.2,
+      "log": true
+    },
+    "num_leaves": {
+      "type": "int",
+      "low": 7,
+      "high": 255,
+      "log": true
+    },
+    "min_child_samples": {
+      "type": "int",
+      "low": 5,
+      "high": 500,
+      "log": true
+    },
+    "truncation_level": {
+      "type": "int",
+      "low": 1,
+      "high": 32,
+      "log": false
+    },
+    "colsample_bytree": {
+      "type": "float",
+      "low": 0.4,
+      "high": 1.0,
+      "log": false
+    },
+    "subsample": {
+      "type": "float",
+      "low": 0.4,
+      "high": 1.0,
+      "log": false
+    },
+    "reg_alpha": {
+      "type": "float",
+      "low": 0.0001,
+      "high": 10.0,
+      "log": true
+    },
+    "reg_lambda": {
+      "type": "float",
+      "low": 0.0001,
+      "high": 30.0,
+      "log": true
+    }
+  },
+  "fixed": {
+    "objective": "lambdarank",
+    "min_split_gain": 0.0,
+    "random_state": 42
+  },
+  "untuned": {
+    "n_estimators": 400,
+    "learning_rate": 0.05,
+    "num_leaves": 31,
+    "min_child_samples": 20,
+    "truncation_level": 5,
+    "colsample_bytree": 1.0,
+    "subsample": 1.0,
+    "reg_alpha": 0.0,
+    "reg_lambda": 0.0
+  }
+}

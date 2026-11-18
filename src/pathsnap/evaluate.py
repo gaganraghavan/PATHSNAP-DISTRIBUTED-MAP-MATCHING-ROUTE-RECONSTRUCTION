@@ -117,6 +117,28 @@ def observation_table(part: Partition, scores: np.ndarray) -> pd.DataFrame:
     return out
 
 
+def arc_prediction_metrics(obs: pd.DataFrame) -> dict[str, float]:
+    """Top-1 and macro P/R/F1 from a table with trip, label_arc and pred_arc (NaN = no prediction).
+
+    Classes are (trip, reference arc); macro averages run over every class seen
+    in truth or prediction. Shared by the classifier-only and HMM evaluations.
+    """
+    y_true = obs.trip.astype(str) + ":" + obs.label_arc.astype(str)
+    y_pred = np.where(obs.pred_arc.isna(), "none",
+                      obs.trip.astype(str) + ":" + obs.pred_arc.fillna(-1).astype(np.int64).astype(str))
+    p, r, f, _ = precision_recall_fscore_support(y_true, y_pred, average="macro", zero_division=0)
+    correct = obs.pred_arc.to_numpy() == obs.label_arc.to_numpy()
+    return {"observations": len(obs), "top1_accuracy": float(correct.mean()),
+            "macro_precision": float(p), "macro_recall": float(r), "macro_f1": float(f)}
+
+
+def observation_metrics(part: Partition, scores: np.ndarray) -> dict[str, float]:
+    """The observation-level subset of :func:`evaluate` (cheaper; used inside tuning trials)."""
+    obs = observation_table(part, np.asarray(scores, dtype=np.float64))
+    return {**arc_prediction_metrics(obs),
+            "observation_log_loss": float(-np.log(np.clip(obs.true_prob, PROB_EPS, 1.0)).mean())}
+
+
 def evaluate(part: Partition, scores: np.ndarray) -> dict[str, float]:
     """Observation-level and candidate-level metrics for one set of candidate scores.
 
@@ -125,11 +147,6 @@ def evaluate(part: Partition, scores: np.ndarray) -> dict[str, float]:
     """
     scores = np.asarray(scores, dtype=np.float64)
     obs = observation_table(part, scores)
-    y_true = obs.trip.astype(str) + ":" + obs.label_arc.astype(str)
-    y_pred = np.where(obs.pred_arc.isna(), "none",
-                      obs.trip.astype(str) + ":" + obs.pred_arc.fillna(-1).astype(np.int64).astype(str))
-    # Classes are (trip, reference arc); macro averages over every class seen in truth or prediction.
-    p, r, f, _ = precision_recall_fscore_support(y_true, y_pred, average="macro", zero_division=0)
 
     # Candidate-level binary view on reliable observations: is this candidate the reference arc?
     cand_mask = part.candidates.label_reliable_50m.to_numpy() == 1
@@ -139,11 +156,7 @@ def evaluate(part: Partition, scores: np.ndarray) -> dict[str, float]:
 
     pred = top1(part.candidates, scores)
     return {
-        "observations": len(obs),
-        "top1_accuracy": float(obs.correct.mean()),
-        "macro_precision": float(p),
-        "macro_recall": float(r),
-        "macro_f1": float(f),
+        **arc_prediction_metrics(obs),
         "observation_log_loss": float(-np.log(np.clip(obs.true_prob, PROB_EPS, 1.0)).mean()),
         "route_continuity": route_continuity(pred, part.arc_ends),
         "candidate_log_loss": float(log_loss(y_c, s_c, labels=[0, 1])),
