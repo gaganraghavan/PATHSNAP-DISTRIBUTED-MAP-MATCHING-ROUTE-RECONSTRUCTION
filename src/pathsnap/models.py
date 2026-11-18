@@ -111,13 +111,17 @@ class SoftmaxRanker(BaseEstimator):
     observation's candidates turns them into P(candidate is the reference arc).
     """
 
+    # reg_lambda and colsample_bytree default to LightGBM's own defaults, so the
+    # untuned step-04 configuration is unchanged by their presence.
     def __init__(self, n_estimators=400, learning_rate=0.05, num_leaves=31, min_child_samples=20,
-                 truncation_level=5, random_state=0):
+                 truncation_level=5, reg_lambda=0.0, colsample_bytree=1.0, random_state=0):
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
         self.num_leaves = num_leaves
         self.min_child_samples = min_child_samples
         self.truncation_level = truncation_level
+        self.reg_lambda = reg_lambda
+        self.colsample_bytree = colsample_bytree
         self.random_state = random_state
 
     def fit(self, X, y, query):
@@ -132,6 +136,7 @@ class SoftmaxRanker(BaseEstimator):
                                      learning_rate=self.learning_rate, num_leaves=self.num_leaves,
                                      min_child_samples=self.min_child_samples,
                                      lambdarank_truncation_level=self.truncation_level,
+                                     reg_lambda=self.reg_lambda, colsample_bytree=self.colsample_bytree,
                                      random_state=self.random_state, verbose=-1)
         self.model_.fit(X, np.asarray(y), group=sizes)
         return self
@@ -142,6 +147,20 @@ class SoftmaxRanker(BaseEstimator):
         e = np.exp(raw - pd.Series(raw).groupby(q).transform("max").to_numpy())
         p = e / pd.Series(e).groupby(q).transform("sum").to_numpy()
         return np.column_stack([1 - p, p])
+
+    def save(self, path) -> None:
+        """Write the fitted trees as a LightGBM text model (portable, diff-able)."""
+        booster = self.model_.booster_ if hasattr(self.model_, "booster_") else self.model_
+        booster.save_model(str(path))
+
+    @classmethod
+    def load(cls, path, **params) -> "SoftmaxRanker":
+        """Rebuild a fitted ranker from a LightGBM text model written by ``save``."""
+        import lightgbm as lgb
+
+        ranker = cls(**params)
+        ranker.model_ = lgb.Booster(model_file=str(path))
+        return ranker
 
 
 def model_specs(seed: int) -> list[ModelSpec]:

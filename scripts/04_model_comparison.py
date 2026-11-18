@@ -53,6 +53,7 @@ from pathsnap.evaluate import (
     load_partition,
     observation_table,
     reference_continuity,
+    training_rows,
 )
 from pathsnap.features import CONTEXT_FEATURES, MODEL_FEATURES
 from pathsnap.models import fit, history, model_specs, positive_proba, select_features
@@ -62,16 +63,6 @@ FEATURE_SETS = {
     # Ablation: per-pair features only, without the step-03 context features.
     "pair": [f for f in MODEL_FEATURES if f not in CONTEXT_FEATURES],
 }
-
-
-def training_rows(part: Partition, max_obs: int, rng: np.random.Generator) -> pd.DataFrame:
-    """Candidates of sampled reliable observations whose reference arc is a candidate."""
-    c = part.candidates
-    c = c[c.label_reliable_50m == 1]
-    hit = c.loc[c.is_label == 1, ["trip", "obs"]].drop_duplicates()
-    if len(hit) > max_obs:
-        hit = hit.iloc[np.sort(rng.choice(len(hit), size=max_obs, replace=False))]
-    return c.merge(hit, on=["trip", "obs"], how="inner")
 
 
 def train_fit_metrics(rows: pd.DataFrame, part: Partition, scores: np.ndarray) -> dict[str, float]:

@@ -73,6 +73,20 @@ def load_partition(partition: str) -> Partition:
     return Partition(cand, pd.concat(labels, ignore_index=True), ends)
 
 
+def training_rows(part: Partition, max_obs: int, rng: np.random.Generator) -> pd.DataFrame:
+    """Candidates of sampled reliable observations whose reference arc is a candidate.
+
+    At most ``max_obs`` observations are sampled; every candidate of a sampled
+    observation is kept, so the class balance matches prediction time.
+    """
+    c = part.candidates
+    c = c[c.label_reliable_50m == 1]
+    hit = c.loc[c.is_label == 1, ["trip", "obs"]].drop_duplicates()
+    if len(hit) > max_obs:
+        hit = hit.iloc[np.sort(rng.choice(len(hit), size=max_obs, replace=False))]
+    return c.merge(hit, on=["trip", "obs"], how="inner")
+
+
 def top1(candidates: pd.DataFrame, scores: np.ndarray) -> pd.DataFrame:
     """Best-scoring candidate per observation: columns trip, obs, arc, score, prob."""
     df = candidates[["trip", "obs", "arc", "candidate_rank"]].copy()

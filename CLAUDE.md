@@ -10,12 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `uv run python scripts/02_candidate_sweep.py`: candidate miss-rate sweep
 - `uv run python scripts/03_feature_engineering.py`: per-candidate features (`artifacts/features/`, needed by 04)
 - `uv run python scripts/04_model_comparison.py`: 7-model comparison, 5-fold trip CV + student-test (~8 min); `--feature-set pair` runs the no-context ablation; `scripts/plot_model_comparison.py` redraws its figures
+- `uv run python scripts/05_bayesian_tuning.py`: Optuna TPE tuning of LambdaRank on the step-04 folds, then tuned vs untuned on student-test (`--trials 60`, `--resume`); writes `results/tuning/` and `models/candidate_ranker/`; `scripts/plot_tuning.py` redraws its figures
 - EDA notebook: edit `scripts/make_eda_notebook.py`, run it from the repo root, then `cd notebooks && uv run jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb`
 - Brief PDFs: `pdftotext -layout "docs/<file>.pdf" -`
 
 ## Layout
 
-Library code in `src/pathsnap/` (io, geo, network, labels, candidates, features, models, evaluate, validate, maps); numbered pipeline scripts in `scripts/`; committed outputs in `results/`; regenerable intermediates in `artifacts/` (git-ignored); dataset in `dataset/Student folder/{train,student_test}/<trip>/` (git-ignored, override with `PATHSNAP_DATA`).
+Library code in `src/pathsnap/` (io, geo, network, labels, candidates, features, models, tuning, evaluate, validate, maps); committed tuned model in `models/candidate_ranker/`; numbered pipeline scripts in `scripts/`; committed outputs in `results/`; regenerable intermediates in `artifacts/` (git-ignored); dataset in `dataset/Student folder/{train,student_test}/<trip>/` (git-ignored, override with `PATHSNAP_DATA`).
 
 ## Established data facts
 
