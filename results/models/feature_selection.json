@@ -1,0 +1,28 @@
+{
+  "method": "ExtraTrees importance, median threshold",
+  "selected_features": [
+    "point_to_arc_m",
+    "arc_length_m",
+    "candidate_rank",
+    "position_along_arc",
+    "heading_delta_sin",
+    "heading_delta_cos"
+  ],
+  "all_features": [
+    "point_to_arc_m",
+    "arc_length_m",
+    "candidate_rank",
+    "position_along_arc",
+    "heading_delta_sin",
+    "heading_delta_cos",
+    "gps_step_m",
+    "gps_gap_s",
+    "gps_speed_mps",
+    "start_node_degree",
+    "end_node_degree"
+  ],
+  "train_trip_count": 64,
+  "validation_trip_count": 16,
+  "validation_seed": 42,
+  "max_train_rows": 300000
+}
