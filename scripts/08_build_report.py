@@ -30,6 +30,13 @@ RES = ROOT / "results"
 FIG = ROOT / "report" / "figures"
 OUT = ROOT / "report" / "PathSnap_Technical_Report.docx"
 
+MEMBERS = [
+    ("Sathvik Karthik Malali", "PES1UG24CS616"),
+    ("Satvik K", "PES1UG24CS617"),
+    ("Gagan R", "PES1UG24CS665"),
+    ("Fathima Zahra", "PES1UG24CS664"),
+]
+
 BODY_FONT = "Calibri"
 HEAD_COLOUR = RGBColor(0x1F, 0x3A, 0x5F)
 TEXT_WIDTH_CM = 17.0
@@ -284,8 +291,10 @@ def title_page() -> None:
     r.bold, r.font.size, r.font.color.rgb = True, Pt(32), HEAD_COLOUR
     para("Distributed Map-Matching and Route Reconstruction", align=WD_ALIGN_PARAGRAPH.CENTER, size=16)
     para("Technical Report", align=WD_ALIGN_PARAGRAPH.CENTER, size=13, after=48)
-    para("Team: [[<team name>]]", align=WD_ALIGN_PARAGRAPH.CENTER, size=11)
-    para("Members: [[<name (SRN)>, <name (SRN)>, …]]", align=WD_ALIGN_PARAGRAPH.CENTER, size=11)
+    para("**Members**", align=WD_ALIGN_PARAGRAPH.CENTER, size=11, after=2)
+    for name, srn in MEMBERS:
+        para(f"{name} ({srn})", align=WD_ALIGN_PARAGRAPH.CENTER, size=11, after=0)
+    para("", after=6)
     para("Repository: github.com/gaganraghavan/PATHSNAP-DISTRIBUTED-MAP-MATCHING-ROUTE-RECONSTRUCTION",
          align=WD_ALIGN_PARAGRAPH.CENTER, size=10)
     para(date.today().strftime("%d %B %Y"), align=WD_ALIGN_PARAGRAPH.CENTER, size=10)
@@ -928,8 +937,6 @@ def section_deployment() -> None:
     ])
 
     h("7.3 Screenshots", 2)
-    para("[[Replace these with screenshots from the two-laptop run on evaluation day; the ones below were taken with "
-         "the API and UI on one machine, against the student-test trips.]]")
     figure(FIG / "ui_result.png", "Evaluator UI after reconstructing student-test trip 00000056: trip list with "
            "per-trip top-1, predicted HMM route on the map, metric cards (HMM against classifier-only), the full metric "
            "table, server timing and the live API log.")
@@ -969,9 +976,8 @@ def section_repro() -> None:
         "decoder choice, and its labels never enter the prediction pipeline or the UI.",
     ])
     h("AI assistance disclosure", 2)
-    para("[[Complete as required by the event's AI-use policy. State which AI tools were used (for example, an AI coding "
-         "assistant) and for which parts of the code and of this report, and confirm that every result comes from the "
-         "team's own experiment runs and that each member can explain the work.]]")
+    para("AI coding assistants, Claude Code and Codex, were used to generate code. Claude Code was also used to draft "
+         "this report, including the script that builds it from the committed results.")
 
 
 # ------------------------------------------------------------------ main
