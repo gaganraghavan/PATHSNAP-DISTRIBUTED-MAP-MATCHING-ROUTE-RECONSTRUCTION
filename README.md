@@ -32,6 +32,7 @@ uv run python scripts/04_model_comparison.py --feature-set pair   # ablation wit
 uv run python scripts/05_bayesian_optimisation.py --trials 30  # Optuna TPE on LambdaRank -> results/tuning/, models/lambdarank_tuned.*, emission scores in artifacts/scores/
 uv run python scripts/06_hmm_decoding.py       # decoder grid on train, classifier-only vs HMM -> results/hmm/, models/hmm_decoder.json
 uv run python scripts/07_route_maps.py         # Folium + static route maps for student-test -> results/maps/route_*.html|png
+uv run python scripts/08_build_report.py       # technical report (Word) from results/ + report/figures/ -> report/PathSnap_Technical_Report.docx
 cd notebooks && uv run jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb
 uv run pytest
 ```
