@@ -1,0 +1,3 @@
+partition,trips,observations,candidates,candidate_miss_count,reliable_observations_le_50m,reliable_candidate_miss_count,positive_candidate_rows,mean_candidates_per_observation,mean_candidate_distance_m,candidate_miss_rate,candidate_miss_rate_le_50m
+student_test,10,19160,383898,17,19133,0,19143,20.97749090960885,46.51668434143066,0.0008872651356993737,0.0
+train,80,208417,3365876,21104,185149,32,187313,20.15670544270948,46.53708379268646,0.10125853457251567,0.0001728337717189939

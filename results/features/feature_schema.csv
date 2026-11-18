@@ -1,0 +1,12 @@
+feature,definition
+point_to_arc_m,Projected point-to-segment distance for this GPS/candidate pair (metres).
+arc_length_m,Length of the directed candidate arc between its two nodes (metres).
+candidate_rank,Zero-based distance rank within the observation's candidate set; ties share a rank.
+position_along_arc,"Projection fraction along the directed candidate arc, from 0 at its start to 1 at its end."
+heading_delta_sin,Sine of candidate-arc bearing minus local GPS movement bearing.
+heading_delta_cos,Cosine of candidate-arc bearing minus local GPS movement bearing.
+gps_step_m,Distance from the previous GPS observation in the trip's UTM projection (metres).
+gps_gap_s,Timestamp difference from the previous observation (seconds).
+gps_speed_mps,"GPS step distance divided by the elapsed seconds, with a 1-second floor."
+start_node_degree,In-degree plus out-degree of the candidate arc's start node.
+end_node_degree,In-degree plus out-degree of the candidate arc's end node.

@@ -1,0 +1,115 @@
+"""Feature engineering for the existing PathSnap candidate pipeline.
+
+Each feature row describes one (GPS observation, candidate arc) pair. Reference
+route labels are attached only as target/quality columns after model features
+have been calculated; they are never included in MODEL_FEATURES.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from .candidates import Candidates
+from .io import Trip
+from .network import Network
+
+
+MODEL_FEATURES = (
+    "point_to_arc_m",
+    "arc_length_m",
+    "candidate_rank",
+    "position_along_arc",
+    "heading_delta_sin",
+    "heading_delta_cos",
+    "gps_step_m",
+    "gps_gap_s",
+    "gps_speed_mps",
+    "start_node_degree",
+    "end_node_degree",
+)
+
+TARGET_COLUMNS = ("is_label", "label_distance_m", "label_reliable_50m")
+IDENTIFIER_COLUMNS = ("obs", "arc")
+
+
+def candidate_feature_frame(
+    trip: Trip,
+    net: Network,
+    xy: np.ndarray,
+    candidates: Candidates,
+    labels: dict[str, np.ndarray],
+) -> pd.DataFrame:
+    """Return one feature/target row per generated candidate arc.
+
+    ``xy`` must be the projected GPS trace used by ``candidates.generate``.
+    ``labels`` must be produced by ``labels.observation_labels``. Target and
+    label-distance columns are metadata and must not be passed as model input.
+    """
+    n_obs = len(xy)
+    if len(candidates.obs) == 0:
+        return pd.DataFrame(columns=[*IDENTIFIER_COLUMNS, *MODEL_FEATURES, *TARGET_COLUMNS])
+
+    step = np.zeros(n_obs, dtype=np.float64)
+    gap = np.zeros(n_obs, dtype=np.float64)
+    forward = np.zeros_like(xy, dtype=np.float64)
+    if n_obs > 1:
+        delta = np.diff(xy, axis=0)
+        forward[:-1] = delta
+        forward[-1] = delta[-1]
+        step[1:] = np.linalg.norm(delta, axis=1)
+        dt = np.diff(trip.track.t.to_numpy(dtype=np.float64))
+        gap[1:] = dt
+
+    # For near-stationary fixes use the previous non-zero movement direction;
+    # zero-displacement observations receive a neutral alignment feature.
+    magnitude = np.linalg.norm(forward, axis=1)
+    backward = np.zeros_like(xy, dtype=np.float64)
+    if n_obs > 1:
+        backward[1:] = np.diff(xy, axis=0)
+    movement = np.where((magnitude > 1.0)[:, None], forward, backward)
+    gps_heading = np.arctan2(movement[:, 0], movement[:, 1])
+
+    obs = candidates.obs.astype(np.int64, copy=False)
+    arc = candidates.arc.astype(np.int64, copy=False)
+    arc_heading = net.heading[arc]
+    angle = np.arctan2(np.sin(arc_heading - gps_heading[obs]),
+                       np.cos(arc_heading - gps_heading[obs]))
+    indegree = np.bincount(net.v, minlength=net.n_nodes)
+    outdegree = np.bincount(net.u, minlength=net.n_nodes)
+    start, end = net.u[arc], net.v[arc]
+    label_arc = np.asarray(labels["label_arc"], dtype=np.int64)
+    label_dist = np.asarray(labels["label_dist"], dtype=np.float64)
+    is_label = arc == label_arc[obs]
+
+    frame = pd.DataFrame({
+        "obs": obs,
+        "arc": arc,
+        "point_to_arc_m": candidates.dist.astype(np.float32, copy=False),
+        "arc_length_m": net.length[arc].astype(np.float32),
+        "candidate_rank": candidates.rank.astype(np.int16, copy=False),
+        "position_along_arc": candidates.t.astype(np.float32, copy=False),
+        "heading_delta_sin": np.sin(angle).astype(np.float32),
+        "heading_delta_cos": np.cos(angle).astype(np.float32),
+        "gps_step_m": step[obs].astype(np.float32),
+        "gps_gap_s": gap[obs].astype(np.float32),
+        "gps_speed_mps": (step[obs] / np.maximum(gap[obs], 1.0)).astype(np.float32),
+        "start_node_degree": (indegree[start] + outdegree[start]).astype(np.int16),
+        "end_node_degree": (indegree[end] + outdegree[end]).astype(np.int16),
+        "is_label": is_label.astype(np.uint8),
+        "label_distance_m": label_dist[obs].astype(np.float32),
+        "label_reliable_50m": (label_dist[obs] <= 50.0).astype(np.uint8),
+    })
+    return frame
+
+
+def observation_candidate_misses(n_obs: int, candidates: Candidates,
+                                 labels: dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+    """Return per-observation candidate misses and the <=50 m reliability mask."""
+    hit = np.zeros(n_obs, dtype=bool)
+    if len(candidates.obs):
+        np.logical_or.at(hit, candidates.obs,
+                         candidates.arc == np.asarray(labels["label_arc"])[candidates.obs])
+    miss = ~hit
+    reliable = np.asarray(labels["label_dist"]) <= 50.0
+    return miss, reliable
