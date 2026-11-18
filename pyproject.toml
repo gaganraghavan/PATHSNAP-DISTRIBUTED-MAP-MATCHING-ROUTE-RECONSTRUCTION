@@ -1,0 +1,32 @@
+[project]
+name = "pathsnap"
+version = "0.1.0"
+description = "PathSnap: map matching of noisy GPS tracks with a candidate classifier and an HMM decoder"
+readme = "README.md"
+authors = [
+    { name = "SingularityT3", email = "44658109+SingularityT3@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "folium>=1.0.0",
+    "matplotlib>=3.11.2",
+    "networkx>=3.7",
+    "numpy>=2.5.5",
+    "pandas>=3.1.1",
+    "pyarrow>=26.0.1",
+    "pyproj>=3.8.0",
+    "scipy>=1.18.1",
+    "shapely>=2.2.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "jupyter>=1.1.1",
+    "nbconvert>=7.17.2",
+    "pytest>=9.2.0",
+]

@@ -2,9 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Current state
+## Commands
 
-The repository currently holds only the hackathon brief in `docs/` (five PDFs). There is no source code, build system, test suite or README yet, so there are no build/lint/test commands to record. Read the PDFs with `pdftotext -layout "docs/<file>.pdf" -`. Update this file once code exists, adding the real commands and layout.
+- `uv sync`: install (Python 3.12, managed by uv)
+- `uv run pytest`: tests
+- `uv run python scripts/01_inventory.py`: inventory + per-observation labels (`artifacts/labels/`, needed by later steps)
+- `uv run python scripts/02_candidate_sweep.py`: candidate miss-rate sweep
+- EDA notebook: edit `scripts/make_eda_notebook.py`, run it from the repo root, then `cd notebooks && uv run jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb`
+- Brief PDFs: `pdftotext -layout "docs/<file>.pdf" -`
+
+## Layout
+
+Library code in `src/pathsnap/` (io, geo, network, labels, candidates, validate, maps); numbered pipeline scripts in `scripts/`; committed outputs in `results/`; regenerable intermediates in `artifacts/` (git-ignored); dataset in `dataset/Student folder/{train,student_test}/<trip>/` (git-ignored, override with `PATHSNAP_DATA`).
+
+## Established data facts
+
+- Each trip has its own road network; arc/node ids are trip-local. Trips span 25 UTM zones; project per trip (`build_network` picks the zone from the GPS centroid).
+- ~92% of arcs have a reverse twin with identical geometry, so direction must come from heading features.
+- Per-observation labels come from `labels.align_to_route` (monotonic DP). Trips 33 and 54 have most points > 50 m from their label (off-network driving); treat those labels as unreliable.
+- Default candidates: radius 100 m, k = 32 nearest (ties kept).
 
 ## Project: PathSnap
 
