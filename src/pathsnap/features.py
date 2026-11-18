@@ -10,10 +10,22 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .candidates import Candidates
+from .candidates import DEFAULT_RADIUS_M, Candidates
 from .io import Trip
 from .network import Network
 
+
+# Features that compare a candidate with the other candidates of the same
+# observation, or with the same arc at neighbouring observations.
+CONTEXT_WINDOW = 3
+CONTEXT_FEATURES = (
+    "dist_minus_min",
+    "cos_minus_max",
+    "n_candidates",
+    "window_mean_dist_m",
+    "window_mean_cos",
+    "window_presence",
+)
 
 MODEL_FEATURES = (
     "point_to_arc_m",
@@ -27,6 +39,7 @@ MODEL_FEATURES = (
     "gps_speed_mps",
     "start_node_degree",
     "end_node_degree",
+    *CONTEXT_FEATURES,
 )
 
 TARGET_COLUMNS = ("is_label", "label_distance_m", "label_reliable_50m")
@@ -100,7 +113,44 @@ def candidate_feature_frame(
         "label_distance_m": label_dist[obs].astype(np.float32),
         "label_reliable_50m": (label_dist[obs] <= 50.0).astype(np.uint8),
     })
-    return frame
+    add_context_features(frame)
+    return frame[[*IDENTIFIER_COLUMNS, *MODEL_FEATURES, *TARGET_COLUMNS]]
+
+
+def add_context_features(frame: pd.DataFrame, window: int = CONTEXT_WINDOW,
+                         radius_m: float = DEFAULT_RADIUS_M) -> None:
+    """Add CONTEXT_FEATURES in place to one trip's candidate rows.
+
+    Uses only candidate geometry, never labels:
+    - dist_minus_min: distance minus the nearest candidate's distance at this observation
+    - cos_minus_max: heading agreement minus the best agreement at this observation
+    - n_candidates: number of candidates at this observation
+    - window_mean_dist_m: mean distance of the same arc over the ``window``
+      observations before and after (``radius_m`` where the arc is not a candidate)
+    - window_mean_cos: mean heading agreement of the same arc where it is a candidate there
+    - window_presence: how many of those 2 * ``window`` observations have the arc as a candidate
+    """
+    g = frame.groupby("obs", sort=False)
+    frame["dist_minus_min"] = (frame.point_to_arc_m - g.point_to_arc_m.transform("min")).astype(np.float32)
+    frame["cos_minus_max"] = (frame.heading_delta_cos - g.heading_delta_cos.transform("max")).astype(np.float32)
+    frame["n_candidates"] = g.arc.transform("size").astype(np.int16)
+
+    keys = frame[["obs", "arc"]]
+    base = frame[["obs", "arc", "point_to_arc_m", "heading_delta_cos"]]
+    dist_sum = np.zeros(len(frame))
+    cos_sum = np.zeros(len(frame))
+    present = np.zeros(len(frame))
+    offsets = [o for o in range(-window, window + 1) if o != 0]
+    for off in offsets:
+        # The neighbour row at obs + off, keyed back onto obs.
+        nb = keys.merge(base.assign(obs=base.obs - off), on=["obs", "arc"], how="left")
+        has = nb.point_to_arc_m.notna().to_numpy()
+        dist_sum += np.where(has, nb.point_to_arc_m.to_numpy(), radius_m)
+        cos_sum += np.where(has, nb.heading_delta_cos.to_numpy(), 0.0)
+        present += has
+    frame["window_mean_dist_m"] = (dist_sum / len(offsets)).astype(np.float32)
+    frame["window_mean_cos"] = (cos_sum / np.maximum(present, 1)).astype(np.float32)
+    frame["window_presence"] = present.astype(np.int16)
 
 
 def observation_candidate_misses(n_obs: int, candidates: Candidates,

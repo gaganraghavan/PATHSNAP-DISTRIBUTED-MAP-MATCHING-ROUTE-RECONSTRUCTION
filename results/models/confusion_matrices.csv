@@ -1,0 +1,8 @@
+model,tn,fp,fn,tp
+Logistic Regression,361521,2991,3523,15610
+Gaussian Naive Bayes,341752,22760,648,18485
+k-Nearest Neighbours,362512,2000,3491,15642
+Random Forest,362612,1900,2986,16147
+Histogram Gradient Boosting,362213,2299,2663,16470
+Multilayer Perceptron,362660,1852,3141,15992
+LightGBM LambdaRank,363010,1502,2709,16424

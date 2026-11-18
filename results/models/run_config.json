@@ -1,0 +1,203 @@
+{
+  "seed": 42,
+  "folds": 5,
+  "fold_assignment": "GroupKFold(shuffle=True) over the 80 training trips, group = trip",
+  "max_train_obs_per_fit": 20000,
+  "primary_metric": "CV mean observation-level top-1 accuracy",
+  "selected_model": "LightGBM LambdaRank",
+  "feature_selection": "ExtraTrees impurity importance, median threshold, refitted per fold",
+  "features_per_fold": {
+    "fold1": [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    "fold2": [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    "fold3": [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    "fold4": [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ],
+    "fold5": [
+      "point_to_arc_m",
+      "candidate_rank",
+      "position_along_arc",
+      "heading_delta_cos",
+      "dist_minus_min",
+      "cos_minus_max",
+      "n_candidates",
+      "window_mean_dist_m",
+      "window_mean_cos"
+    ]
+  },
+  "features_final": [
+    "point_to_arc_m",
+    "candidate_rank",
+    "position_along_arc",
+    "heading_delta_cos",
+    "dist_minus_min",
+    "cos_minus_max",
+    "n_candidates",
+    "window_mean_dist_m",
+    "window_mean_cos"
+  ],
+  "reference_label_continuity": {
+    "train": 0.9889745940471447,
+    "student_test": 0.9850130548302872
+  },
+  "models": [
+    {
+      "name": "Logistic Regression",
+      "family": "Linear",
+      "configuration": "standardised, L2, C=1.0",
+      "params": {
+        "memory": "None",
+        "steps": "[('standardscaler', StandardScaler()), ('logisticregression', LogisticRegression(max_iter=1000))]",
+        "transform_input": "None",
+        "verbose": "False"
+      }
+    },
+    {
+      "name": "Gaussian Naive Bayes",
+      "family": "Probabilistic",
+      "configuration": "per-class Gaussian likelihoods, var_smoothing=1e-9",
+      "params": {
+        "priors": "None",
+        "var_smoothing": "1e-09"
+      }
+    },
+    {
+      "name": "k-Nearest Neighbours",
+      "family": "Instance-based",
+      "configuration": "standardised, k=50, uniform weights",
+      "params": {
+        "memory": "None",
+        "steps": "[('standardscaler', StandardScaler()), ('kneighborsclassifier', KNeighborsClassifier(n_jobs=-1, n_neighbors=50))]",
+        "transform_input": "None",
+        "verbose": "False"
+      }
+    },
+    {
+      "name": "Random Forest",
+      "family": "Bagging ensemble",
+      "configuration": "200 trees, min_samples_leaf=5, sqrt features",
+      "params": {
+        "bootstrap": "True",
+        "ccp_alpha": "0.0",
+        "class_weight": "None",
+        "criterion": "'gini'",
+        "max_depth": "None",
+        "max_features": "'sqrt'",
+        "max_leaf_nodes": "None",
+        "max_samples": "None",
+        "min_impurity_decrease": "0.0",
+        "min_samples_leaf": "5",
+        "min_samples_split": "2",
+        "min_weight_fraction_leaf": "0.0",
+        "monotonic_cst": "None",
+        "n_estimators": "200",
+        "n_jobs": "-1",
+        "oob_score": "False",
+        "random_state": "42",
+        "verbose": "0",
+        "warm_start": "False"
+      }
+    },
+    {
+      "name": "Histogram Gradient Boosting",
+      "family": "Boosting",
+      "configuration": "lr=0.08, 31 leaves, up to 400 iters, early stop on 10% rows",
+      "params": {
+        "categorical_features": "'from_dtype'",
+        "class_weight": "None",
+        "early_stopping": "True",
+        "interaction_cst": "None",
+        "l2_regularization": "1.0",
+        "learning_rate": "0.08",
+        "loss": "'log_loss'",
+        "max_bins": "255",
+        "max_depth": "None",
+        "max_features": "1.0",
+        "max_iter": "400",
+        "max_leaf_nodes": "31",
+        "min_samples_leaf": "20",
+        "monotonic_cst": "None",
+        "n_iter_no_change": "20",
+        "random_state": "42",
+        "scoring": "'loss'",
+        "tol": "1e-07",
+        "validation_fraction": "0.1",
+        "verbose": "0",
+        "warm_start": "False"
+      }
+    },
+    {
+      "name": "Multilayer Perceptron",
+      "family": "Neural network",
+      "configuration": "standardised, 64-32 ReLU, Adam lr=1e-3, early stop on held-out trips",
+      "params": {
+        "alpha": "0.0001",
+        "batch_size": "1024",
+        "hidden_layer_sizes": "(64, 32)",
+        "learning_rate_init": "0.001",
+        "max_epochs": "100",
+        "patience": "8",
+        "random_state": "42",
+        "validation_share": "0.15"
+      }
+    },
+    {
+      "name": "LightGBM LambdaRank",
+      "family": "Learning to rank",
+      "configuration": "lambdarank per observation, 400 trees, lr=0.05, 31 leaves, softmax per observation",
+      "params": {
+        "learning_rate": "0.05",
+        "min_child_samples": "20",
+        "n_estimators": "400",
+        "num_leaves": "31",
+        "random_state": "42",
+        "truncation_level": "5"
+      }
+    }
+  ],
+  "versions": {
+    "python": "3.12.16",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.5",
+    "pandas": "3.1.1"
+  },
+  "runtime_seconds": 495.5
+}

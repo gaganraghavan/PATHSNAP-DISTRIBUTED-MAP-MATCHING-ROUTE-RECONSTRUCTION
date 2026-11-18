@@ -40,6 +40,12 @@ FEATURE_DEFINITIONS = {
     "gps_speed_mps": "GPS step distance divided by the elapsed seconds, with a 1-second floor.",
     "start_node_degree": "In-degree plus out-degree of the candidate arc's start node.",
     "end_node_degree": "In-degree plus out-degree of the candidate arc's end node.",
+    "dist_minus_min": "Candidate distance minus the nearest candidate's distance at the same observation (metres).",
+    "cos_minus_max": "Heading agreement (cosine) minus the best agreement among the observation's candidates.",
+    "n_candidates": "Number of candidates at the observation.",
+    "window_mean_dist_m": "Mean distance of the same arc over the 3 observations before and after; 100 m where it is not a candidate.",
+    "window_mean_cos": "Mean heading agreement of the same arc over those observations where it is a candidate (0 if none).",
+    "window_presence": "Number of the 6 neighbouring observations (3 before, 3 after) that have this arc as a candidate.",
 }
 
 
